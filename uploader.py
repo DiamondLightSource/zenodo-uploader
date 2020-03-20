@@ -31,24 +31,14 @@ def action_upload(directory):
     for filename in os.listdir(directory):
         print(filename)
 
-        if False:
-            data = {"name": filename}
-            files = {"file": open(os.path.join(directory, filename), "rb")}
-            r = requests.post(
-                "https://zenodo.org/api/deposit/depositions/%s/files" % d_id,
+        # use new stream-based API
+        with open(os.path.join(directory, filename), "rb") as fin:
+            r = requests.put(
+                "%s/%s" % (bucket_url, filename),
+                data=fin,
                 params={"access_token": ACCESS_TOKEN},
-                data=data,
-                files=files,
             )
-            pprint.pprint(r.json())
-        else:
-            # use new stream-based API
-            with open(os.path.join(directory, filename), "rb") as fin:
-                r = requests.put(
-                    "%s/%s" % (bucket_url, filename),
-                    data=fin,
-                    params={"access_token": ACCESS_TOKEN}
-                )
+        pprint.pprint(r.json())
 
     # now add some metadata
 
