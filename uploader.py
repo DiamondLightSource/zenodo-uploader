@@ -66,7 +66,7 @@ class zenodo_uploader(object):
         )
 
         pprint.pprint(r.json())
-        if not r.status_code in (200, 201, 202, 410):
+        if not r.status_code in (200, 201, 202):
             raise RuntimeError("in create: HTTP status %d" % r.status_code)
 
         r_json = r.json()
@@ -79,13 +79,13 @@ class zenodo_uploader(object):
         """push the metadata for this deposition"""
 
         r = requests.put(
-            "https://zenodo.org/api/deposit/depositions/%s" % self._dep_id,
+            "%s/api/deposit/depositions/%s" % (self._server, self._dep_id),
             params={"access_token": self._token},
             data=json.dumps(self._metadata),
             headers={"Content-Type": "application/json"},
         )
 
-        if not r.status_code in (200, 201, 202, 410):
+        if not r.status_code in (200, 201, 202):
             raise RuntimeError("in create: HTTP status %d" % r.status_code)
 
         print("Uploaded metadata for: %s" % (self._metadata["metadata"]["title"]))
@@ -102,7 +102,7 @@ class zenodo_uploader(object):
                 params={"access_token": self._token},
             )
 
-        if not r.status_code in (200, 201, 202, 410):
+        if not r.status_code in (200, 201, 202):
             raise RuntimeError("in create: HTTP status %d" % r.status_code)
 
         print("Upload complete")
@@ -139,5 +139,5 @@ if __name__ == "__main__":
         }
     }
 
-    zu = zenodo_uploader(sys.argv[1], metadata)
+    zu = zenodo_uploader(sys.argv[1], metadata, mode="sandbox")
     zu.upload()
