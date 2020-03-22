@@ -1,3 +1,4 @@
+import argparse
 import requests
 import os
 import sys
@@ -126,7 +127,42 @@ class zenodo_uploader(object):
         # - particularly to catch Ctrl-C
 
 
+def uploader():
+    """main() - parse args, make Zenodo uploader, execute, catch errors"""
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-z", "--zenodo_id", help="zenodo upload key")
+    parser.add_argument(
+        "-d", "--directory", help="directory to upload", action="append"
+    )
+    parser.add_argument(
+        "-f", "--files", help="files to upload e.g. foo_???.cbf", action="append"
+    )
+    parser.add_argument(
+        "-a",
+        "--archive",
+        help="pack directory to named archive before upload",
+        action="append",
+    )
+    args = parser.parse_args()
+
+    # validate inputs
+
+    if args.archive:
+        n_files = len(args.files) if args.files else 0
+        n_directories = len(args.directory) if args.directory else 0
+        if len(args.archive) != n_files + n_directories:
+            sys.exit("number of archives must equal number of directories / file sets")
+
+    print(args.zenodo_id)
+    for directory in args.directory:
+        print(directory)
+
+
 if __name__ == "__main__":
+    uploader()
+
+if __name__ == "__dumb__":
 
     metadata = {
         "metadata": {
