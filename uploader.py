@@ -127,7 +127,7 @@ class ZenodoUploader(object):
         # - particularly to catch Ctrl-C
 
     def get_deposition(self):
-        return "%s/deposit/%s" % (self.server, self._dep_id)
+        return "%s/deposit/%s" % (self._server, self._dep_id)
 
 
 def uploader():
