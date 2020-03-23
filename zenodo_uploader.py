@@ -1,3 +1,5 @@
+#!/usr/bin/env dials.python
+
 import argparse
 import requests
 import os
