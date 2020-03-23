@@ -18,16 +18,15 @@ def get_access_token(sandbox=False):
         return open(os.path.join(os.environ["HOME"], ".zenodo_id"), "r").read().strip()
 
 
-class zenodo_uploader(object):
+class ZenodoUploader(object):
     """tool to upload files to http://zenodo.org"""
 
-    def __init__(self, directory, metadata, sandbox=False):
+    def __init__(self, file_list, metadata, token, sandbox=False):
 
         # validate the structure of the metadata - there will be critical
         # items which must be present for this to be a useful deposition
 
-        if not "metadata" in metadata:
-            raise ValueError("metadata key missing")
+        metadata = {"metadata": metadata}
 
         valid = set(("title", "description", "creators", "keywords"))
         names = set(metadata["metadata"])
@@ -47,9 +46,9 @@ class zenodo_uploader(object):
             }
         )
 
-        self._directory = directory
+        self._file_list = file_list
         self._metadata = metadata
-        self._token = get_access_token(mode)
+        self._token = token
         self._dep_id = None
         self._dep_url = None
         if sandbox:
@@ -68,7 +67,6 @@ class zenodo_uploader(object):
             headers={"Content-Type": "application/json"},
         )
 
-        pprint.pprint(r.json())
         if not r.status_code in (200, 201, 202):
             raise RuntimeError("in create: HTTP status %d" % r.status_code)
 
@@ -98,7 +96,7 @@ class zenodo_uploader(object):
 
         print("Uploading: %s" % filename)
 
-        with open(os.path.join(self._directory, filename), "rb") as fin:
+        with open(filename, "rb") as fin:
             r = requests.put(
                 "%s/%s" % (self._dep_url, filename),
                 data=fin,
@@ -121,12 +119,15 @@ class zenodo_uploader(object):
 
         self._create()
         self._update()
-        for filename in os.listdir(self._directory):
+        for filename in self._file_list:
             self._upload(filename)
         self._publish()
 
         # and in the except, delete the partial upload as it is broken
         # - particularly to catch Ctrl-C
+
+    def get_dep_id(self):
+        return self._dep_id
 
 
 def uploader():
@@ -234,6 +235,16 @@ def uploader():
 
     # metadata
     print_metadata(metadata)
+
+    # files
+    print("Upload consists of:")
+    for upload in uploads:
+        print(upload)
+
+    # make and act on
+    zenodo_uploader = ZenodoUploader(uploads, metadata, args.zenodo_id, args.sandbox)
+    zenodo_uploader.upload()
+    print("Upload complete for deposition %s" % str(zenodo_uploader.get_dep_id()))
 
 
 if __name__ == "__main__":
