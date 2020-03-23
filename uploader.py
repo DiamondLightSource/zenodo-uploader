@@ -5,7 +5,7 @@ import sys
 import json
 import pprint
 
-from file_packing import packup
+from file_packing import packup, md5
 from metadata import validate_metadata, print_metadata, make_metadata, read_metadata
 
 
@@ -156,6 +156,12 @@ def uploader():
         "-d", "--directory", help="directory to upload", action="append"
     )
     parser.add_argument("files", nargs="*", help="individual files")
+    parser.add_argument(
+        "-x",
+        "--checksum",
+        help="compute md5 checksum of uploaded files",
+        action="store_true",
+    )
 
     # what we are doing with the files
     parser.add_argument(
@@ -240,6 +246,8 @@ def uploader():
     print("Upload consists of:")
     for upload in uploads:
         print(upload)
+        if args.checksum:
+            print("md5:%s" % md5(upload))
 
     # make and act on
     zenodo_uploader = ZenodoUploader(uploads, metadata, args.zenodo_id, args.sandbox)

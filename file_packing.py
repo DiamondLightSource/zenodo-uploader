@@ -2,6 +2,15 @@ import os
 import zipfile
 import tarfile
 import tempfile
+import hashlib
+
+
+def md5(filename):
+    digest = hashlib.md5()
+    with open(filename, "rb") as f:
+        for c in iter(lambda: f.read(4096), b""):
+            digest.update(c)
+    return digest.hexdigest()
 
 
 def packup_zip(output_filename, files):
