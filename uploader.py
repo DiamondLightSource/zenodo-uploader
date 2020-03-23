@@ -98,7 +98,7 @@ class ZenodoUploader(object):
 
         with open(filename, "rb") as fin:
             r = requests.put(
-                "%s/%s" % (self._dep_url, filename),
+                "%s/%s" % (self._dep_url, os.path.split(filename)[-1]),
                 data=fin,
                 params={"access_token": self._token},
             )
@@ -126,8 +126,8 @@ class ZenodoUploader(object):
         # and in the except, delete the partial upload as it is broken
         # - particularly to catch Ctrl-C
 
-    def get_dep_id(self):
-        return self._dep_id
+    def get_deposition(self):
+        return "%s/deposit/%s" % (self.server, self._dep_id)
 
 
 def uploader():
@@ -244,7 +244,7 @@ def uploader():
     # make and act on
     zenodo_uploader = ZenodoUploader(uploads, metadata, args.zenodo_id, args.sandbox)
     zenodo_uploader.upload()
-    print("Upload complete for deposition %s" % str(zenodo_uploader.get_dep_id()))
+    print("Upload complete for deposition %s" % str(zenodo_uploader.get_deposition()))
 
 
 if __name__ == "__main__":
