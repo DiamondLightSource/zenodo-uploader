@@ -6,19 +6,19 @@ import json
 import pprint
 
 
-def get_access_token(mode="production"):
+def get_access_token(sandbox=False):
     """get upload key, strip white space."""
 
-    if mode == "production":
-        return open(os.path.join(os.environ["HOME"], ".zenodo_id"), "r").read().strip()
-    elif mode == "sandbox":
+    if sandbox:
         return open(os.path.join(os.environ["HOME"], ".sandbox_id"), "r").read().strip()
+    else:
+        return open(os.path.join(os.environ["HOME"], ".zenodo_id"), "r").read().strip()
 
 
 class zenodo_uploader(object):
     """tool to upload files to http://zenodo.org"""
 
-    def __init__(self, directory, metadata, mode="production"):
+    def __init__(self, directory, metadata, sandbox=False):
 
         # validate the structure of the metadata - there will be critical
         # items which must be present for this to be a useful deposition
@@ -49,10 +49,10 @@ class zenodo_uploader(object):
         self._token = get_access_token(mode)
         self._dep_id = None
         self._dep_url = None
-        if mode == "production":
-            self._server = "https://zenodo.org"
-        elif mode == "sandbox":
+        if sandbox:
             self._server = "https://sandbox.zenodo.org"
+        else:
+            self._server = "https://zenodo.org"
 
         for k in "title", "description", "creators", "keywords":
             print(metadata["metadata"][k])
@@ -131,13 +131,18 @@ def uploader():
     """main() - parse args, make Zenodo uploader, execute, catch errors"""
 
     parser = argparse.ArgumentParser()
+
+    # zenodo / administrative matters
     parser.add_argument("-z", "--zenodo_id", help="zenodo upload key")
+    parser.add_argument("-s", "--sandbox", help="use sandbox mode", action="store_true")
+
+    # file related stuff
     parser.add_argument(
         "-d", "--directory", help="directory to upload", action="append"
     )
-    parser.add_argument(
-        "-f", "--files", help="files to upload e.g. foo_???.cbf", action="append"
-    )
+    parser.add_argument("files", nargs="*", help="individual files")
+
+    # what we are doing with the files
     parser.add_argument(
         "-a",
         "--archive",
@@ -146,17 +151,36 @@ def uploader():
     )
     args = parser.parse_args()
 
-    # validate inputs
+    # validate inputs - must pass some files, only pass files _or_ directories
+    if not args.directory and not args.files:
+        sys.exit("must pass some files for upload")
+    if args.directory and args.files:
+        sys.exit("only pass files or directories")
 
     if args.archive:
-        n_files = len(args.files) if args.files else 0
-        n_directories = len(args.directory) if args.directory else 0
-        if len(args.archive) != n_files + n_directories:
-            sys.exit("number of archives must equal number of directories / file sets")
+        if args.files and len(args.archive) != 1:
+            sys.exit(
+                "if passing individual files and archive, only one archive allowed"
+            )
+        if args.directory and len(args.directory) != len(args.archive):
+            sys.exit("number of archives must equal number of directories")
 
-    print(args.zenodo_id)
-    for directory in args.directory:
-        print(directory)
+    if not args.zenodo_id:
+        args.zenodo_id = get_access_token(sandbox=args.sandbox)
+
+    print("ID: %s" % args.zenodo_id)
+    if args.directory:
+        for j, directory in enumerate(args.directory):
+            archive = args.archive[j] if args.archive else None
+            if archive:
+                print("%s => %s" % (directory, archive))
+            else:
+                print("%s" % (directory))
+    else:
+        if args.archive:
+            print("%s <=" % args.archive[0])
+            for f in args.files:
+                print("  %s" % f)
 
 
 if __name__ == "__main__":
@@ -175,5 +199,5 @@ if __name__ == "__dumb__":
         }
     }
 
-    zu = zenodo_uploader(sys.argv[1], metadata, mode="sandbox")
+    zu = zenodo_uploader(sys.argv[1], metadata, sandbox=True)
     zu.upload()
