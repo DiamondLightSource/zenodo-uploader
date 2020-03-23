@@ -10,10 +10,10 @@ Usage
 -----
 
 ```
-usage: uploader.py [-h] [-z ZENODO_ID] [-s] [-m METADATA] [-T TITLE]
-                   [-C CREATOR] [-A AFFILIATION] [-K KEYWORD] [-D DESCRIPTION]
-                   [-d DIRECTORY] [-a ARCHIVE]
-                   [files [files ...]]
+usage: zenodo_uploader.py [-h] [-z ZENODO_ID] [-s] [-m METADATA] [-T TITLE]
+                          [-C CREATOR] [-A AFFILIATION] [-K KEYWORD]
+                          [-D DESCRIPTION] [-d DIRECTORY] [-x] [-a ARCHIVE]
+                          [files [files ...]]
 
 positional arguments:
   files                 individual files
@@ -37,6 +37,28 @@ optional arguments:
                         description
   -d DIRECTORY, --directory DIRECTORY
                         directory to upload
+  -x, --checksum        compute md5 checksum of uploaded files
   -a ARCHIVE, --archive ARCHIVE
-  pack directory to named archive before upload
+                        pack directory to named archive before upload
 ```
+
+Options - metadata
+- -T - title - allowed exactly once, upload title
+- -C - creator, multiple, as "Doe, John R."
+- -A - affiliation - either one for all creators or one per creator
+- -K - keyword - multiple
+- -D - description - long form prose describing the deposition
+- -m - metadata file - can pass above as a JSON formatted file
+
+Options - file
+- -d - directory - multiple allowed
+- -a - archive - (optional) if using -d must be equal number, else if
+  using FILES only one - will pack the data into .tar.gz or .zip files
+  before uploading
+- FILES - list of files to be deposited (if no directories passed)
+- -x - check sum (with md5) files before upload to allow comparison
+option
+
+Options - zenodo specific
+- -z - zenodo upload ID
+- -s - sandbox (requires diffent ID, used for development)
