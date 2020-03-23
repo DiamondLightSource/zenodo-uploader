@@ -20,12 +20,16 @@ def packup_tar_gz(output_filename, files):
             fout.write(filename, arcname=os.path.split(filename)[-1])
 
 
-def packup(archive_name, files, fmt):
+def packup(archive_name, files):
     """make a temporary archive in new temporary directory named archive_name, 
     containing files in list (with directories removed) format as fmt in 
     (zip, tar.gz)"""
 
-    if not fmt in ("zip", "tar.gz"):
+    if archive_name.endswith(".zip"):
+        fmt = "zip"
+    elif archive_name.endswith(".tar.gz"):
+        fmt = "tar.gz"
+    else:
         raise ValueError("unknown format %s" % fmt)
 
     tmpdir = tempfile.mkdtemp()
