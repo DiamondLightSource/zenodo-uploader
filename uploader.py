@@ -5,6 +5,8 @@ import sys
 import json
 import pprint
 
+from file_packing import packup
+
 
 def get_access_token(sandbox=False):
     """get upload key, strip white space."""
@@ -165,22 +167,33 @@ def uploader():
         if args.directory and len(args.directory) != len(args.archive):
             sys.exit("number of archives must equal number of directories")
 
+    # check that we can guess what format to use for archives
+    for archive in args.archive:
+        if not archive.endswith(".zip") and not archive.endswith(".tar.gz"):
+            sys.exit("unknown archive type for %s" % archive)
+
     if not args.zenodo_id:
         args.zenodo_id = get_access_token(sandbox=args.sandbox)
 
+    # explain what we are going to do
     print("ID: %s" % args.zenodo_id)
-    if args.directory:
-        for j, directory in enumerate(args.directory):
-            archive = args.archive[j] if args.archive else None
-            if archive:
-                print("%s => %s" % (directory, archive))
-            else:
-                print("%s" % (directory))
-    else:
-        if args.archive:
-            print("%s <=" % args.archive[0])
-            for f in args.files:
-                print("  %s" % f)
+
+    # prepare archives
+    if args.archive:
+        if args.files:
+            archives = [packup(args.archive[0], args.files)]
+        else:
+            archives = []
+            for archive, directory in zip(args.archive, args.directory):
+                files = [
+                    os.path.join(directory, filename)
+                    for filename in os.listdir(directory)
+                    if os.path.isfile(os.path.join(directory, filename))
+                ]
+                archives.append(packup(archive, files))
+
+        for archive in archives:
+            print(archive)
 
 
 if __name__ == "__main__":
