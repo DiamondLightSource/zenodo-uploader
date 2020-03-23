@@ -6,6 +6,7 @@ import json
 import pprint
 
 from file_packing import packup
+from metadata import validate_metadata, print_metadata, make_metadata, read_metadata
 
 
 def get_access_token(sandbox=False):
@@ -56,8 +57,7 @@ class zenodo_uploader(object):
         else:
             self._server = "https://zenodo.org"
 
-        for k in "title", "description", "creators", "keywords":
-            print(metadata["metadata"][k])
+        print_metadata(metadata["metadata"])
 
     def _create(self):
         """create new empty deposition"""
@@ -138,6 +138,18 @@ def uploader():
     parser.add_argument("-z", "--zenodo_id", help="zenodo upload key")
     parser.add_argument("-s", "--sandbox", help="use sandbox mode", action="store_true")
 
+    # upload metadata - title, authors, keywords, description, metafile
+    parser.add_argument("-m", "--metadata", help="json metadata file")
+    parser.add_argument("-T", "--title", help="upload title")
+    parser.add_argument(
+        "-C", "--creator", help="creator name e.g. Public, Joe Q.", action="append"
+    )
+    parser.add_argument(
+        "-A", "--affiliation", help="creator affiliation", action="append"
+    )
+    parser.add_argument("-K", "--keyword", help="keyword to associate", action="append")
+    parser.add_argument("-D", "--description", help="description")
+
     # file related stuff
     parser.add_argument(
         "-d", "--directory", help="directory to upload", action="append"
@@ -176,6 +188,20 @@ def uploader():
     if not args.zenodo_id:
         args.zenodo_id = get_access_token(sandbox=args.sandbox)
 
+    # validate metadata - allow file read and update from command line
+    # (with that priority)
+    if args.metadata:
+        metadata = read_metadata(args.metadata)
+    else:
+        metadata = {}
+
+    cl_metadata = make_metadata(
+        args.title, args.description, args.creator, args.affiliation, args.keyword
+    )
+
+    metadata.update(cl_metadata)
+    validate_metadata(metadata)
+
     # explain what we are going to do
     print("ID: %s" % args.zenodo_id)
 
@@ -207,23 +233,8 @@ def uploader():
         uploads.extend(args.files)
 
     # metadata
+    print_metadata(metadata)
 
 
 if __name__ == "__main__":
     uploader()
-
-if __name__ == "__dumb__":
-
-    metadata = {
-        "metadata": {
-            "title": "Test automated upload of Eiger data set 2",
-            "description": """Example data set of cubic insulin recorded on Diamond Light source beamline I04 - being used here as a test upload using the Zenodo REST API. Probably should have things like a deposition ID in here as well as crystallisation condition smiles strings or something.""",
-            "creators": [
-                {"name": "Winter, Graeme", "affiliation": "Diamond Light Source"}
-            ],
-            "keywords": ["automated upload"],
-        }
-    }
-
-    zu = zenodo_uploader(sys.argv[1], metadata, sandbox=True)
-    zu.upload()
