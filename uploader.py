@@ -168,9 +168,10 @@ def uploader():
             sys.exit("number of archives must equal number of directories")
 
     # check that we can guess what format to use for archives
-    for archive in args.archive:
-        if not archive.endswith(".zip") and not archive.endswith(".tar.gz"):
-            sys.exit("unknown archive type for %s" % archive)
+    if args.archive:
+        for archive in args.archive:
+            if not archive.endswith(".zip") and not archive.endswith(".tar.gz"):
+                sys.exit("unknown archive type for %s" % archive)
 
     if not args.zenodo_id:
         args.zenodo_id = get_access_token(sandbox=args.sandbox)
@@ -178,22 +179,34 @@ def uploader():
     # explain what we are going to do
     print("ID: %s" % args.zenodo_id)
 
-    # prepare archives
+    # prepare archives / files for upload
+    uploads = []
+
     if args.archive:
         if args.files:
-            archives = [packup(args.archive[0], args.files)]
+            uploads.append(packup(args.archive[0], args.files))
         else:
-            archives = []
             for archive, directory in zip(args.archive, args.directory):
                 files = [
                     os.path.join(directory, filename)
                     for filename in os.listdir(directory)
                     if os.path.isfile(os.path.join(directory, filename))
                 ]
-                archives.append(packup(archive, files))
+                uploads.append(packup(archive, files))
 
-        for archive in archives:
-            print(archive)
+    elif args.directory:
+        for directory in args.directory:
+            uploads.extend(
+                [
+                    os.path.join(directory, filename)
+                    for filename in os.listdir(directory)
+                    if os.path.isfile(os.path.join(directory, filename))
+                ]
+            )
+    else:
+        uploads.extend(args.files)
+
+    # metadata
 
 
 if __name__ == "__main__":
