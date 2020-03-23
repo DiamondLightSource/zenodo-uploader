@@ -56,8 +56,6 @@ class ZenodoUploader(object):
         else:
             self._server = "https://zenodo.org"
 
-        print_metadata(metadata["metadata"])
-
     def _create(self):
         """create new empty deposition"""
         r = requests.post(
