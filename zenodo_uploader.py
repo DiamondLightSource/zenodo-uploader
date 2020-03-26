@@ -172,6 +172,26 @@ def uploader():
     )
     args = parser.parse_args()
 
+    # validate metadata - allow file read and update from command line
+    # (with that priority)
+    if args.metadata:
+        metadata = read_metadata(args.metadata)
+    else:
+        metadata = {}
+
+    # pull files or directory (&c.) from metadata file if that is where they are
+    if not args.directory and "directory" in metadata:
+        args.directory = metadata["directory"]
+        del metadata["directory"]
+
+    if not args.files and "files" in metadata:
+        args.files = metadata["files"]
+        del metadata["files"]
+
+    if not args.archive and "archive" in metadata:
+        args.archive = metadata["archive"]
+        del metadata["archive"]
+
     # validate inputs - must pass some files, only pass files _or_ directories
     if not args.directory and not args.files:
         sys.exit("must pass some files for upload")
@@ -194,13 +214,6 @@ def uploader():
 
     if not args.zenodo_id:
         args.zenodo_id = get_access_token(sandbox=args.sandbox)
-
-    # validate metadata - allow file read and update from command line
-    # (with that priority)
-    if args.metadata:
-        metadata = read_metadata(args.metadata)
-    else:
-        metadata = {}
 
     cl_metadata = make_metadata(
         args.title, args.description, args.creator, args.affiliation, args.keyword
