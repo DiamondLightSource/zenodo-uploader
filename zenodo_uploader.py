@@ -44,7 +44,6 @@ class ZenodoUploader(object):
             {
                 "access_right": "open",
                 "upload_type": "dataset",
-                "communities": [{"identifier": "mx", "identifier":"covid-19"}],
             }
         )
 
