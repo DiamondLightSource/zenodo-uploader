@@ -109,7 +109,16 @@ class ZenodoUploader(object):
 
     def _publish(self):
         """complete the deposition process"""
-        pass
+
+        r = requests.post(
+            "%s/api/deposit/depositions/%s/actions/publish" % (self._server, self._dep_id),
+            params={"access_token": self._token}
+        )
+        if not r.status_code in (200, 201, 202):
+            raise RuntimeError("in create: HTTP status %d" % r.status_code)
+
+        print("Upload published")
+
 
     def upload(self):
         """process files for upload"""
