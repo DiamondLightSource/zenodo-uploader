@@ -82,10 +82,27 @@ class ZenodoUpdater(object):
             "relations",
             "resource_type",
         ):
-            del metadata[k]
+            if k in metadata:
+                del metadata[k]
+
+        # hard code communities in update
+        communities = [{"identifier": "covid-19"}, {"identifier": "mx"}]
+        metadata["communities"] = communities
 
         metadata = {"metadata": metadata}
         metadata["metadata"].update({"access_right": "open", "upload_type": "dataset"})
+
+        pprint.pprint(metadata["metadata"])
+
+        # switch to edit mode
+        r = requests.post(
+            "%s/api/deposit/depositions/%s/actions/edit" % (self._server, self._dep_id),
+            params={"access_token": self._token},
+        )
+
+        if not r.status_code in (200, 201, 202):
+            pprint.pprint(r.json())
+            raise RuntimeError("in edit: HTTP status %d" % r.status_code)
 
         r = requests.put(
             "%s/api/deposit/depositions/%s" % (self._server, self._dep_id),
