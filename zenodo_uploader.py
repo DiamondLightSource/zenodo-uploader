@@ -52,6 +52,28 @@ class ZenodoUploader(object):
         else:
             self._server = "https://zenodo.org"
 
+        # before we do anything, check to see if it exists
+        self._find()
+
+    def _find(self):
+        """find this deposition"""
+
+        title = self._metadata["title"]
+
+        r = requests.get(
+            '%s/api/records/?page=1&size=2&q=title:"%s"'
+            % (self._server, urllib.parse.quote(title))
+        )
+
+        if not r.status_code in (200, 201, 202):
+            pprint.pprint(r.json())
+            raise RuntimeError("in find: HTTP status %d" % r.status_code)
+
+        response = r.json()["hits"]
+
+        if response["total"] > 0:
+            raise RuntimeError("%d matches to title %s" % (response["total"], title))
+
     def _create(self):
         """create new empty deposition"""
         r = requests.post(
