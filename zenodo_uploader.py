@@ -40,12 +40,7 @@ class ZenodoUploader(object):
 
         # add standard metadata
 
-        metadata["metadata"].update(
-            {
-                "access_right": "open",
-                "upload_type": "dataset",
-            }
-        )
+        metadata["metadata"].update({"access_right": "open", "upload_type": "dataset"})
 
         self._file_list = file_list
         self._metadata = metadata
@@ -67,6 +62,7 @@ class ZenodoUploader(object):
         )
 
         if not r.status_code in (200, 201, 202):
+            pprint.pprint(r.json())
             raise RuntimeError("in create: HTTP status %d" % r.status_code)
 
         r_json = r.json()
@@ -86,7 +82,8 @@ class ZenodoUploader(object):
         )
 
         if not r.status_code in (200, 201, 202):
-            raise RuntimeError("in create: HTTP status %d" % r.status_code)
+            pprint.pprint(r.json())
+            raise RuntimeError("in update: HTTP status %d" % r.status_code)
 
         print("Uploaded metadata for: %s" % (self._metadata["metadata"]["title"]))
 
@@ -103,7 +100,8 @@ class ZenodoUploader(object):
             )
 
         if not r.status_code in (200, 201, 202):
-            raise RuntimeError("in create: HTTP status %d" % r.status_code)
+            pprint.pprint(r.json())
+            raise RuntimeError("in upload: HTTP status %d" % r.status_code)
 
         print("Upload complete")
 
@@ -111,14 +109,15 @@ class ZenodoUploader(object):
         """complete the deposition process"""
 
         r = requests.post(
-            "%s/api/deposit/depositions/%s/actions/publish" % (self._server, self._dep_id),
-            params={"access_token": self._token}
+            "%s/api/deposit/depositions/%s/actions/publish"
+            % (self._server, self._dep_id),
+            params={"access_token": self._token},
         )
         if not r.status_code in (200, 201, 202):
-            raise RuntimeError("in create: HTTP status %d" % r.status_code)
+            pprint.pprint(r.json())
+            raise RuntimeError("in publish: HTTP status %d" % r.status_code)
 
         print("Upload published")
-
 
     def upload(self):
         """process files for upload"""
